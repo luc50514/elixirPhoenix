@@ -11,4 +11,13 @@ defmodule HelloWeb.HelloControllerTest do
     assert html_response(conn, 200) =~ "Hello World, from rich"
   end
 
+  test "GET /:messenger from hello", %{conn: conn} do
+    conn = get(conn,"/hello")
+    assert html_response(conn, 200) =~ "Hello World, from Phoenix!"
+  end
+
+  test "GET /:messenger from levi", %{conn: conn} do
+    conn = get(conn,"/hello/levi")
+    assert html_response(conn, 200) =~ "Hello World, from levi!"
+  end
 end
