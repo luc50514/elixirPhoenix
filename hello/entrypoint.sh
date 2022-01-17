@@ -1,21 +1,33 @@
 #!/bin/bash
-# entrypoint.sh
-# Docker entrypoint script.
 
-# Wait until Postgres is ready.
-while ! pg_isready -q -h $PGHOST -p $PGPORT -U $PGUSER
+# Wait until Postgres is ready before running the next step.
+while ! pg_isready -q -h $DATABASE_HOST -p $DATABASE_PORT -U $DATABASE_USER
 do
-  echo "$(date) - waiting for database to start"
+  echo "$(date) - waiting for database to start."
   sleep 2
 done
 
-# Create, migrate, and seed database if it doesn't exist.
-if [[ -z `psql -Atqc "\\list $PGDATABASE"` ]]; then
-  echo "Database $PGDATABASE does not exist. Creating..."
-  createdb -E UTF8 $PGDATABASE -l en_US.UTF-8 -T template0
-  mix ecto.migrate
-  mix run priv/repo/seeds.exs
-  echo "Database $PGDATABASE created."
+print_db_name()
+{
+  `PGPASSWORD=$DATABASE_PASS psql -h $DATABASE_HOST
+  -U $DATABASE_USER -Atqc "\\list $DATABASE_NAME"`
+}
+
+# Create the database if it doesn't exist.
+# -z flag returns true if string is null.
+if [[ -z print_db_name ]]; then
+  echo "Database $DATABASE_NAME does not exist. Creating..."
+  mix ecto.drop
+  mix ecto.create
+  echo "Database $DATABASE_NAME created."
 fi
 
+# Runs migrations, will skip if migrations are up to date.
+echo "Database $DATABASE_NAME exists, running migrations..."
+mix ecto.drop
+mix ecto.create
+mix ecto.migrate
+echo "Migrations finished."
+
+# Start the server.
 exec mix phx.server
