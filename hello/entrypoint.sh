@@ -1,9 +1,10 @@
+
 #!/bin/bash
 
 # Wait until Postgres is ready before running the next step.
 while ! pg_isready -h $DATABASE_HOST -p $DATABASE_PORT -U $DATABASE_USER
 do
-  echo "$(date) - waiting for database to start."
+  echo "$(date) - waiting for database $DATABASE_HOST $DATABASE_PORT $DATABASE_USER to start."
   sleep 2
 done
 
